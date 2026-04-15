@@ -1,48 +1,33 @@
 {
   "name": "smart-dashboard",
   "version": "1.0.0",
-  "description": "PWA Smart Dashboard with Tasks, Notes and Tracker",
-  "type": "module",
+  "description": "PWA Smart Dashboard Architecture",
   "main": "src/main.js",
   "scripts": {
-    "start": "node server/server.js",
-    "dev": "docker-compose -f docker/docker-compose.yml up --build",
-    "dev:frontend": "docker-compose -f docker/docker-compose.yml up frontend",
-    "dev:backend": "docker-compose -f docker/docker-compose.yml up backend",
-    "build": "echo 'Build complete'",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "lint": "eslint src/**/*.js",
-    "lint:fix": "eslint src/**/*.js --fix",
-    "format": "prettier --write \"src/**/*.js\"",
-    "docker:build": "docker build -f docker/Dockerfile -t smart-dashboard .",
-    "docker:run": "docker run -p 3000:3000 smart-dashboard"
+    "start": "npx http-server public",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "pwa",
-    "dashboard",
-    "tasks",
-    "notes",
-    "tracker",
-    "offline-first"
+    "spa",
+    "architecture"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Student",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1l4ke/mobileapp.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/1l4ke/mobileapp/issues"
+  },
+  "homepage": "https://github.com/1l4ke/mobileapp#readme",
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
-    "body-parser": "^1.20.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2"
-  },
-  "devDependencies": {
-    "eslint": "^8.56.0",
-    "jest": "^29.7.0",
-    "prettier": "^3.1.1"
-  },
-  "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=9.0.0"
+    "@supabase/supabase-js": "^2.101.1",
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1"
   }
 }

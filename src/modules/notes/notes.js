@@ -1,99 +1,157 @@
-import { isGuest, getCurrentUser } from "../../core/authService.js";
-import { storage } from "../../utils/storage.js";
-
-// Ключ для localStorage
-const getStorageKey = () => {
-  const user = getCurrentUser();
-  return isGuest() ? `guest_notes` : `notes_${user?.id || 'unknown'}`;
-};
-
-// Загрузка данных
-let notes = [];
-
-function loadNotes() {
-  const key = getStorageKey();
-  notes = storage.get(key, []);
-  
-  // Если данных нет, создаем демо-данные
-  if (notes.length === 0) {
-    notes = [
-      { id: 1, text: "Купить молоко и хлеб", date: new Date().toISOString().split('T')[0], pinned: false },
-      { id: 2, text: "Позвонить клиенту по проекту", date: new Date().toISOString().split('T')[0], pinned: true }
-    ];
-    saveNotes();
+class NotesModule {
+  constructor() {
+    this.notes = JSON.parse(localStorage.getItem('notes')) || [];
   }
-}
 
-// Сохранение данных
-function saveNotes() {
-  const key = getStorageKey();
-  storage.set(key, notes);
-  window.dispatchEvent(new CustomEvent("notes:updated", { detail: { notes } }));
-}
-
-// Инициализация
-loadNotes();
-
-// Получить все заметки
-export function getNotes() {
-  return [...notes].sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-    return new Date(b.date) - new Date(a.date);
-  });
-}
-
-// Добавить заметку
-export function addNote(text) {
-  const newNote = {
-    id: Date.now(),
-    text: text.trim(),
-    date: new Date().toISOString().split('T')[0],
-    pinned: false
-  };
-  notes.unshift(newNote);
-  saveNotes();
-  return newNote;
-}
-
-// Закрепить/открепить заметку
-export function togglePin(noteId) {
-  const note = notes.find(n => n.id === noteId);
-  if (note) {
-    note.pinned = !note.pinned;
-    saveNotes();
+  async init() {
+    this.save();
   }
-  return note;
-}
 
-// Удалить заметку
-export function deleteNote(noteId) {
-  const initialLength = notes.length;
-  notes = notes.filter(n => n.id !== noteId);
-  if (notes.length !== initialLength) {
-    saveNotes();
-    return true;
+  render(container) {
+    container.innerHTML = `
+      <div class="notes-header">
+        <h2>📔 Заметки <span class="notes-count">(${this.notes.length})</span></h2>
+        <div class="notes-controls">
+          <input id="notes-search" placeholder="🔍 Поиск заметок..." />
+          <button class="add-note-btn">➕ Новая заметка</button>
+        </div>
+      </div>
+      
+      <div class="notes-grid">
+        <!-- Заметки рендерятся динамически -->
+      </div>
+      
+      <div class="note-editor" style="display:none;">
+        <textarea id="note-content" placeholder="Напиши заметку..."></textarea>
+        <div class="editor-actions">
+          <button id="note-save">💾 Сохранить</button>
+          <button id="note-cancel">❌ Отмена</button>
+        </div>
+      </div>
+    `;
+
+    this.renderNotes();
+    this.bindEvents();
   }
-  return false;
-}
 
-// Обновить заметку
-export function updateNote(noteId, newText) {
-  const note = notes.find(n => n.id === noteId);
-  if (note && newText?.trim()) {
-    note.text = newText.trim();
-    saveNotes();
-    return true;
+  renderNotes(filter = '') {
+    const grid = document.querySelector('.notes-grid');
+    const filtered = this.notes.filter(note => 
+      note.content.toLowerCase().includes(filter.toLowerCase())
+    );
+
+    grid.innerHTML = filtered.map((note, i) => `
+      <div class="note-card" data-index="${i}">
+        <div class="note-preview">
+          ${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}
+        </div>
+        <div class="note-meta">
+          <small>${new Date(note.created).toLocaleDateString()}</small>
+          <div class="note-actions">
+            <button class="edit-note">✏️</button>
+            <button class="delete-note">🗑️</button>
+          </div>
+        </div>
+      </div>
+    `).join('') || '<div class="empty-state"><p>📝 Нет заметок. Создай первую!</p></div>';
+
+    document.querySelector('.notes-count').textContent = `(${filtered.length})`;
   }
-  return false;
-}
 
-// Синхронизация между вкладками
-if (typeof window !== "undefined") {
-  window.addEventListener("storage", (e) => {
-    if (e.key?.startsWith("guest_notes") || e.key?.startsWith("notes_")) {
-      loadNotes();
-      window.dispatchEvent(new CustomEvent("notes:synced", { detail: { notes } }));
+  bindEvents() {
+    // Поиск
+    document.querySelector('#notes-search').oninput = (e) => {
+      this.renderNotes(e.target.value);
+    };
+
+    // Add note
+    document.querySelector('.add-note-btn').onclick = () => {
+      this.showEditor();
+    };
+
+    // Save
+    document.querySelector('#note-save').onclick = () => this.saveNote();
+
+    // Cancel
+    document.querySelector('#note-cancel').onclick = () => {
+      this.hideEditor();
+      this.clearEditor();
+    };
+
+    // Card actions
+    document.querySelector('.notes-grid').addEventListener('click', (e) => {
+      const card = e.target.closest('.note-card');
+      if (!card) return;
+
+      const index = parseInt(card.dataset.index);
+      
+      if (e.target.closest('.edit-note')) {
+        this.editNote(index);
+      } else if (e.target.closest('.delete-note')) {
+        this.deleteNote(index);
+      }
+    });
+  }
+
+  showEditor(editIndex = null) {
+    this.editingIndex = editIndex;
+    document.querySelector('.note-editor').style.display = 'block';
+    document.querySelector('#note-content').focus();
+    
+    if (editIndex !== null) {
+      document.querySelector('#note-content').value = this.notes[editIndex].content;
+      document.querySelector('#note-save').textContent = '✏️ Обновить';
     }
-  });
+  }
+
+  hideEditor() {
+    document.querySelector('.note-editor').style.display = 'none';
+    this.clearEditor();
+  }
+
+  clearEditor() {
+    document.querySelector('#note-content').value = '';
+    document.querySelector('#note-save').textContent = '💾 Сохранить';
+    this.editingIndex = null;
+  }
+
+  saveNote() {
+    const content = document.querySelector('#note-content').value.trim();
+    if (!content) return;
+
+    if (this.editingIndex !== null) {
+      // Edit
+      this.notes[this.editingIndex].content = content;
+      this.notes[this.editingIndex].updated = new Date().toISOString();
+    } else {
+      // New
+      this.notes.push({
+        content,
+        created: new Date().toISOString(),
+        updated: new Date().toISOString()
+      });
+    }
+
+    this.save();
+    this.renderNotes();
+    this.hideEditor();
+  }
+
+  editNote(index) {
+    this.showEditor(index);
+  }
+
+  deleteNote(index) {
+    if (confirm('Удалить заметку?')) {
+      this.notes.splice(index, 1);
+      this.save();
+      this.renderNotes();
+    }
+  }
+
+  save() {
+    localStorage.setItem('notes', JSON.stringify(this.notes));
+  }
 }
+
+window.Core.registerModule('notes', new NotesModule());

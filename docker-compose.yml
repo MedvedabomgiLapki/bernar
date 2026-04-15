@@ -26,4 +26,4 @@ services:
       - ./src/:/usr/share/nginx/html/src/
     depends_on:
       backend:
-        condition: service_healthyм
+        condition: service_healthy
