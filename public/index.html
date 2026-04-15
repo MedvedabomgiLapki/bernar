@@ -1,662 +1,1515 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="light">
+<html lang="ru" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Dashboard</title>
+    <title>LifeOS - Персональная система управления</title>
     <meta name="theme-color" content="#10b981">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icon-192.png">
-    <link rel="stylesheet" href="./src/styles/main.css" type="text/css">
-    <link rel="stylesheet" href="./src/styles/variables.css">
-    <link rel="stylesheet" href="./src/modules/tasks/tasks.css" type="text/css">
-    <link rel="stylesheet" href="./src/modules/notes/notes.css" type="text/css">
-    <link rel="stylesheet" href="./src/modules/tracker/tracker.css" type="text/css">
     
     <style>
-        /* 🎨 Цветовая схема (ваша) */
+        /* ========================================
+           🎨 CSS VARIABLES & THEME
+           ======================================== */
         :root {
             --primary: #10b981;
             --primary-dark: #059669;
-            --secondary: #14b8a6;
+            --primary-light: #d1fae5;
+            --secondary: #8b5cf6;
             --accent: #f59e0b;
-            --danger: #f97316;
+            --danger: #ef4444;
             --success: #22c55e;
-            --bg-page: #f0fdfa;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            
+            /* Light Theme */
+            --bg-main: #f1f5f9;
+            --bg-sidebar: #ffffff;
             --bg-card: #ffffff;
             --bg-input: #f8fafc;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --border: #cbd5e1;
-            --shadow: 0 20px 40px rgba(16, 185, 129, 0.15);
-            --shadow-sm: 0 4px 12px rgba(16, 185, 129, 0.1);
-            --radius: 16px;
-            --radius-sm: 10px;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
         
         [data-theme="dark"] {
-            --primary: #34d399;
-            --primary-dark: #10b981;
-            --secondary: #5eead4;
-            --accent: #fbbf24;
-            --danger: #fb923c;
-            --success: #4ade80;
-            --bg-page: #0f172a;
+            --bg-main: #0f172a;
+            --bg-sidebar: #1e293b;
             --bg-card: #1e293b;
             --bg-input: #334155;
             --text-primary: #f1f5f9;
             --text-secondary: #94a3b8;
-            --border: #475569;
-            --shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --border: #334155;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
         }
         
-        /* 🎨 Базовые стили */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
         body {
-            background: var(--bg-page);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-main);
             color: var(--text-primary);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            transition: background 0.3s, color 0.3s;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* ========================================
+           🏗️ LAYOUT
+           ======================================== */
+        .app-container {
+            display: flex;
             min-height: 100vh;
         }
         
-        /* 🏗️ Layout: Sidebar + Content */
-        #app-container {
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 1rem;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
-        }
-        
-        .app-wrapper {
-            display: flex;
-            flex: 1;
-            max-width: 1400px;
-            width: 100%;
-            margin: 0 auto;
-        }
-        
-        /* 🔝 Header */
-        .header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            box-shadow: var(--shadow-sm);
-            padding: 0.75rem 1.5rem;
-            position: sticky;
-            top: 0;
+            gap: 0.5rem;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
             z-index: 100;
+            transition: transform 0.3s ease;
         }
         
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 0.75rem;
+        .logo {
+            padding: 0 0.75rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem;
         }
         
-        .header h1 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-        
-        .user-profile {
+        .logo h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            flex-wrap: wrap;
         }
         
-        .user-display {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            background: transparent;
+            border: none;
             border-radius: 12px;
-            padding: 0.5rem 0.875rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
             font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            width: 100%;
+        }
+        
+        .nav-item:hover {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transform: translateX(4px);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .nav-icon {
+            font-size: 1.3rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .user-section {
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 10px;
+            background: var(--bg-input);
+            margin-bottom: 0.5rem;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .user-details {
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .user-name {
+            font-weight: 600;
             font-size: 0.9rem;
             white-space: nowrap;
-            max-width: 150px;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         
-        .logout-btn {
-            background: var(--danger);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: background 0.2s;
+        .user-level {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
         }
-        .logout-btn:hover { background: #ea580c; }
         
-        .points-display {
-            background: var(--bg-card);
-            border: 2px solid var(--primary);
-            color: var(--primary-dark);
-            border-radius: 10px;
-            padding: 0.4rem 0.75rem;
-            font-weight: 600;
-            font-size: 0.85rem;
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        .header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 0.25rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
         }
         
-        /* 🌓 Theme Toggle */
-        .theme-toggle {
-            --toggle-size: 24px;
-            position: relative;
-            width: calc(var(--toggle-size) * 2);
-            height: var(--toggle-size);
-            display: inline-block;
-        }
-        .theme-toggle input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.3);
-            border-radius: var(--toggle-size);
-            transition: 0.3s;
-        }
-        .slider:before {
-            position: absolute;
-            content: "☀️";
-            height: calc(var(--toggle-size) - 4px);
-            width: calc(var(--toggle-size) - 4px);
-            left: 2px; bottom: 2px;
-            background: white;
-            border-radius: 50%;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-        }
-        input:checked + .slider { background: var(--primary); }
-        input:checked + .slider:before {
-            transform: translateX(calc(var(--toggle-size) - 2px));
-            content: "🌙";
-        }
-        
-        /* 🧭 SIDEBAR NAVIGATION */
-        .sidebar {
-            width: 220px;
-            background: var(--bg-card);
-            border-right: 1px solid var(--border);
-            padding: 1rem 0.75rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            position: sticky;
-            top: 72px;
-            height: calc(100vh - 140px);
-            overflow-y: auto;
-            flex-shrink: 0;
-        }
-        
-        .nav-btn {
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 0.875rem 1rem;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            border: 2px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 0.95rem;
-            font-weight: 500;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            text-align: left;
-            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
         }
         
-        .nav-btn .nav-icon { font-size: 1.3rem; }
-        
-        .nav-btn:hover {
-            background: var(--primary-light, #d1fae5);
-            border-color: var(--primary);
-            transform: translateX(3px);
-        }
-        
-        .nav-btn.active {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            border-color: transparent;
-            box-shadow: var(--shadow-sm);
         }
         
-        /* 📦 Main Content */
-        #main-container {
-            flex: 1;
-            padding: 1.5rem;
-            overflow-y: auto;
-            min-height: calc(100vh - 140px);
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
         }
         
-        /* Auth форма */
-        #auth-root {
+        .btn-secondary {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+        
+        .theme-toggle {
+            width: 48px;
+            height: 26px;
+            background: var(--bg-input);
+            border-radius: 26px;
+            cursor: pointer;
+            position: relative;
+            border: none;
+            padding: 3px;
+        }
+        
+        .theme-toggle-slider {
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            transition: transform 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 60vh;
-            padding: 1rem;
+            font-size: 10px;
         }
         
-        #auth-root > div {
+        [data-theme="dark"] .theme-toggle-slider {
+            transform: translateX(22px);
+        }
+        
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
             background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
             box-shadow: var(--shadow);
-            border-radius: var(--radius);
             border: 1px solid var(--border);
-            padding: 2.5rem 2rem;
-            max-width: 420px;
-            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+        
+        .card-progress {
+            height: 8px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        
+        .card-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
             text-align: center;
         }
         
-        #auth-root h1 {
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .stat-value {
             font-size: 2rem;
-            margin-bottom: 0.5rem;
+            font-weight: 700;
             color: var(--primary);
+            margin-bottom: 0.25rem;
         }
         
-        #auth-root p {
+        .stat-label {
             color: var(--text-secondary);
-            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
         }
         
-        .tabs {
-            display: flex;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .tab-btn {
-            flex: 1;
-            padding: 0.875rem;
-            border: 2px solid var(--border);
-            background: var(--bg-card);
-            color: var(--text-primary);
-            border-radius: var(--radius-sm);
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .tab-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary-dark);
-        }
-        
+        /* Forms */
         .form-group {
-            text-align: left;
             margin-bottom: 1.25rem;
         }
         
-        .form-group label {
+        .form-label {
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
             color: var(--text-primary);
-            font-size: 0.95rem;
         }
         
-        #auth-email, #auth-password {
+        .form-input, .form-select, .form-textarea {
             width: 100%;
             padding: 0.875rem 1rem;
             border: 2px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 1rem;
+            border-radius: 10px;
             background: var(--bg-input);
             color: var(--text-primary);
+            font-size: 1rem;
             transition: border-color 0.2s;
         }
         
-        #auth-email:focus, #auth-password:focus {
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
         
-        #auth-submit {
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        /* Auth Screen */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: var(--bg-main);
+        }
+        
+        .auth-card {
+            background: var(--bg-card);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            max-width: 450px;
             width: 100%;
-            padding: 1rem;
+            text-align: center;
+        }
+        
+        .auth-logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .auth-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 1.1rem;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .auth-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 0.875rem;
+            border: 2px solid var(--border);
+            background: transparent;
+            border-radius: 10px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s;
         }
         
-        #auth-submit:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-sm);
+        .auth-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
         }
         
-        #auth-submit:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
+        /* Modules Specific */
+        .module-section {
+            display: none;
         }
         
-        #auth-message {
-            margin-top: 1.25rem;
-            padding: 0.875rem 1rem;
-            border-radius: var(--radius-sm);
-            font-weight: 500;
-            font-size: 0.9rem;
+        .module-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Habit Tracker */
+        .habit-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        
+        .habit-icon {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .habit-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .habit-progress {
+            height: 6px;
             background: var(--bg-input);
+            border-radius: 3px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+        
+        .habit-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        
+        .habit-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Finance */
+        .finance-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .finance-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
             border-left: 4px solid var(--primary);
         }
         
-        /* 🦶 Footer */
-        .footer {
-            background: var(--bg-card);
+        .finance-card.income {
+            border-left-color: var(--success);
+        }
+        
+        .finance-card.expense {
+            border-left-color: var(--danger);
+        }
+        
+        .finance-label {
+            font-size: 0.9rem;
             color: var(--text-secondary);
-            border-top: 1px solid var(--border);
-            padding: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .finance-amount {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        
+        .finance-card.income .finance-amount {
+            color: var(--success);
+        }
+        
+        .finance-card.expense .finance-amount {
+            color: var(--danger);
+        }
+        
+        /* Calendar */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+        }
+        
+        .calendar-day-header {
             text-align: center;
-            font-size: 0.875rem;
-            margin-top: auto;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 0.5rem;
+            font-size: 0.85rem;
         }
         
-        /* 📱 Mobile Responsive (< 768px) */
-        @media (max-width: 768px) {
-            .app-wrapper { flex-direction: column; }
-            
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-input);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .calendar-day:hover {
+            background: var(--primary-light);
+            transform: scale(1.05);
+        }
+        
+        .calendar-day.active {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .calendar-day.has-events::after {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background: var(--secondary);
+            border-radius: 50%;
+            margin-top: 2px;
+        }
+        
+        /* Goals */
+        .goal-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+        
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .goal-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .goal-deadline {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Health */
+        .health-metric {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        
+        .health-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+        
+        .health-unit {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 101;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
             .sidebar {
-                width: 100%;
-                height: auto;
-                position: static;
-                flex-direction: row;
-                overflow-x: auto;
-                padding: 0.5rem;
-                border-right: none;
-                border-bottom: 1px solid var(--border);
-                white-space: nowrap;
+                transform: translateX(-100%);
             }
             
-            .sidebar .nav-btn {
-                flex-direction: column;
-                font-size: 0.8rem;
-                padding: 0.6rem 0.8rem;
-                min-width: 75px;
-                justify-content: center;
-                gap: 0.3rem;
+            .sidebar.open {
+                transform: translateX(0);
             }
             
-            .sidebar .nav-btn .nav-icon { font-size: 1.2rem; }
+            .main-content {
+                margin-left: 0;
+            }
             
-            #main-container {
+            .menu-toggle {
+                display: block;
+            }
+            
+            .finance-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
                 padding: 1rem;
-                min-height: auto;
+                padding-top: 5rem;
             }
             
-            .header h1 { font-size: 1.2rem; }
-            .user-display { font-size: 0.85rem; padding: 0.4rem 0.7rem; max-width: 120px; }
-            .logout-btn { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
-            .points-display { padding: 0.3rem 0.5rem; font-size: 0.8rem; }
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .calendar-grid {
+                grid-template-columns: repeat(7, 1fr);
+                font-size: 0.8rem;
+            }
         }
         
-        @media (max-width: 480px) {
-            .header-content { gap: 0.5rem; }
-            .header { padding: 0.6rem 1rem; }
-            .sidebar .nav-btn { min-width: 65px; padding: 0.5rem 0.6rem; font-size: 0.75rem; }
-            #auth-root > div { padding: 2rem 1.5rem; }
-            #auth-root h1 { font-size: 1.75rem; }
+        /* Overlay for mobile */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
         }
         
-        /* 🌙 Dark mode fixes */
-        [data-theme="dark"] .sidebar {
-            background: var(--bg-card) !important;
-            border-right-color: var(--border) !important;
+        .overlay.show {
+            display: block;
         }
-        [data-theme="dark"] .nav-btn {
-            background: var(--bg-card) !important;
-            color: var(--text-primary) !important;
-            border-color: var(--border) !important;
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
         }
-        [data-theme="dark"] .nav-btn:hover {
-            background: var(--primary-light) !important;
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
         }
-        [data-theme="dark"] .nav-btn.active {
-            background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
-            color: white !important;
+        
+        /* Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+        
+        .badge-warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .badge-danger {
+            background: #fee2e2;
+            color: #dc2626;
         }
     </style>
 </head>
-
 <body>
-    <div id="app-container">
-        
-        <!-- 🔝 Header -->
-        <header class="header">
-            <div class="header-content">
-                <h1>🎯 Smart Dashboard</h1>
-                <div class="user-profile" id="user-profile">
-                    <span id="user-display" class="user-display">Гость</span>
-                    <div class="points-display">
-                        <span>⭐</span><span id="total-points">0</span>
-                    </div>
-                    <button onclick="logout()" class="logout-btn">Выход</button>
-                    <label class="theme-toggle">
-                        <input type="checkbox" id="themeSwitch">
-                        <span class="slider"></span>
-                    </label>
-                </div>
+    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    <div class="overlay" onclick="toggleMenu()"></div>
+    
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <h1>🚀 LifeOS</h1>
             </div>
-        </header>
-
-        <!-- 🏗️ Layout Wrapper -->
-        <div class="app-wrapper">
             
-            <!-- 🧭 Sidebar Navigation (сбоку на десктопе) -->
-            <nav class="sidebar">
-                <button data-route="tasks" class="nav-btn active">
+            <nav>
+                <button class="nav-item active" data-module="tasks">
                     <span class="nav-icon">✅</span>
-                    <span class="nav-text">Задачи</span>
+                    <span>Задачи</span>
                 </button>
-                <button data-route="notes" class="nav-btn">
-                    <span class="nav-icon">🗒️</span>
-                    <span class="nav-text">Заметки</span>
+                <button class="nav-item" data-module="habits">
+                    <span class="nav-icon">🎯</span>
+                    <span>Привычки</span>
                 </button>
-                <button data-route="tracker" class="nav-btn">
-                    <span class="nav-icon">🚀</span>
-                    <span class="nav-text">Прогресс</span>
+                <button class="nav-item" data-module="notes">
+                    <span class="nav-icon">📝</span>
+                    <span>Заметки</span>
+                </button>
+                <button class="nav-item" data-module="calendar">
+                    <span class="nav-icon">📅</span>
+                    <span>Календарь</span>
+                </button>
+                <button class="nav-item" data-module="finance">
+                    <span class="nav-icon">💰</span>
+                    <span>Финансы</span>
+                </button>
+                <button class="nav-item" data-module="goals">
+                    <span class="nav-icon">🏆</span>
+                    <span>Цели</span>
+                </button>
+                <button class="nav-item" data-module="health">
+                    <span class="nav-icon">❤️</span>
+                    <span>Здоровье</span>
+                </button>
+                <button class="nav-item" data-module="analytics">
+                    <span class="nav-icon">📊</span>
+                    <span>Аналитика</span>
                 </button>
             </nav>
-
-            <!-- 📦 Main Content Area -->
-            <main id="main-container">
-                <!-- Auth Screen -->
-                <div id="auth-root">
-                    <div>
-                        <h1>🎯 Smart Dashboard</h1>
-                        <p>Вход / Регистрация</p>
-                        
-                        <div class="tabs">
-                            <button id="tab-login" class="tab-btn active">Вход</button>
-                            <button id="tab-register" class="tab-btn">Регистрация</button>
-                        </div>
-                        
-                        <form id="auth-form" style="display:flex;flex-direction:column;gap:1.25rem;">
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input id="auth-email" type="email" placeholder="demo@gmail.com" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Пароль</label>
-                                <input id="auth-password" type="password" minlength="6" placeholder="******" required>
-                            </div>
-                            <button type="submit" id="auth-submit">Войти</button>
-                        </form>
-                        
-                        <div id="auth-message"></div>
+            
+            <div class="user-section">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">Г</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">Гость</div>
+                        <div class="user-level">Уровень 1</div>
                     </div>
                 </div>
-            </main>
-        </div>
-
-        <!-- 🦶 Footer -->
-        <footer class="footer">
-            <p>© 2026 Smart Dashboard PWA | Работает оффлайн 🟢</p>
-        </footer>
-    </div>
-
-    <!-- ⚠️ СКРИПТЫ — БЕЗ ИЗМЕНЕНИЙ (авторизация, кеширование, PWA) -->
-    
-    <script src="/src/core/router.js"></script>
-    <script src="/src/core/dataService.js"></script>
-    <script src="/src/core/notifications.js"></script>
-    <script src="/src/core/cacheService.js"></script>
-    <script src="/src/core/uiContainer.js"></script>
-    <script src="/src/modules/tasks/tasks.js"></script>
-    <script src="/src/modules/tasks/taskUI.js"></script>
-    <script src="/src/modules/notes/notes.js"></script>
-    <script src="/src/modules/notes/notesUI.js"></script>
-    <script src="/src/modules/tracker/tracker.js"></script>
-    <script src="/src/modules/tracker/trackerUI.js"></script>
-    
-    <script>
-        // === АВТОРИЗАЦИЯ (ваш оригинальный код) ===
-        const savedUser = sessionStorage.getItem('authUser');
-        if (savedUser) {
-          window.currentUser = JSON.parse(savedUser);
-          const userDisplay = document.getElementById('user-display');
-          if (userDisplay && window.currentUser.email !== 'Гость') {
-            userDisplay.textContent = window.currentUser.email;
-            userDisplay.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
-            userDisplay.style.color = 'white';
-            document.getElementById('auth-root').style.display = 'none';
-            setTimeout(async () => {
-              await window.Core.init();
-              window.Router.init();
-              await window.Core.loadModule('tasks');
-            }, 500);
-          }
-        }
-        
-        const form = document.getElementById('auth-form');
-        const tabs = document.querySelectorAll('.tab-btn');
-        const message = document.getElementById('auth-message');
-        const submitBtn = document.getElementById('auth-submit');
-        let mode = 'login';
-
-        tabs[0].onclick = () => { 
-          mode = 'login'; 
-          tabs[0].classList.add('active'); 
-          tabs[1].classList.remove('active'); 
-          submitBtn.textContent = 'Войти'; 
-        };
-        tabs[1].onclick = () => { 
-          mode = 'register'; 
-          tabs[1].classList.add('active'); 
-          tabs[0].classList.remove('active'); 
-          submitBtn.textContent = 'Зарегистрироваться'; 
-        };
-
-        form.onsubmit = async (e) => {
-          e.preventDefault();
-          message.textContent = '⏳ Загрузка...';
-          submitBtn.disabled = true;
-
-          try {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            const url = mode === 'register' ? '/api/register' : '/api/login';
-            const res = await fetch(url, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email, password }),
-            });
-
-            if (!res.ok) {
-              const text = await res.text();
-              throw new Error(`HTTP ${res.status} ${res.statusText}: ${text}`);
-            }
-
-            const data = await res.json();
-            
-            message.innerHTML = mode === 'register' 
-              ? '✅ Регистрация OK. Проверь почту.' 
-              : '✅ Вход выполнен!';
-            
-            setTimeout(async () => {
-              window.currentUser = { email };
-              sessionStorage.setItem('authUser', JSON.stringify({email}));
-              sessionStorage.setItem('authSession', JSON.stringify(data.session || {}));
-              
-              const userDisplay = document.getElementById('user-display');
-              userDisplay.textContent = email;
-              userDisplay.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
-              userDisplay.style.color = 'white';
-              
-              document.getElementById('auth-root').remove();
-              
-              await window.Core.init();
-              window.Router.init();
-              await window.Core.loadModule('tasks');
-            }, 1500);
-            
-          } catch (err) {
-            message.textContent = err.message.includes('not confirmed') 
-              ? '📧 Подтверди email' 
-              : `❌ ${err.message}`;
-          } finally {
-            submitBtn.disabled = false;
-          }
-        };
-        
-        window.logout = function() {
-          sessionStorage.removeItem('authUser');
-          sessionStorage.removeItem('authSession');
-          window.currentUser = null;
-          document.getElementById('main-container').innerHTML = `
-            <div style="text-align:center;padding:3rem;">
-              <h2 style="color:var(--primary);">👋 До свидания!</h2>
-              <button onclick="location.reload()" style="padding:1rem 2rem;background:var(--primary);color:white;border:none;border-radius:10px;font-weight:500;cursor:pointer;margin-top:1rem;">Войти снова</button>
+                <button class="nav-item" onclick="logout()">
+                    <span class="nav-icon">🚪</span>
+                    <span>Выход</span>
+                </button>
             </div>
-          `;
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h2 class="page-title" id="pageTitle">
+                    <span>✅</span> Задачи
+                </h2>
+                <div class="header-actions">
+                    <button class="theme-toggle" onclick="toggleTheme()">
+                        <div class="theme-toggle-slider">☀️</div>
+                    </button>
+                    <button class="btn btn-primary" id="addBtn" onclick="showAddModal()">
+                        <span>➕</span> Добавить
+                    </button>
+                </div>
+            </div>
+            
+            <!-- MODULES -->
+            
+            <!-- Tasks Module -->
+            <section class="module-section active" id="module-tasks">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-value" id="totalTasks">0</div>
+                        <div class="stat-label">Всего задач</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value" id="completedTasks">0</div>
+                        <div class="stat-label">Выполнено</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-value" id="pendingTasks">0</div>
+                        <div class="stat-label">В процессе</div>
+                    </div>
+                </div>
+                
+                <div class="cards-grid" id="tasksList">
+                    <!-- Tasks will be rendered here -->
+                </div>
+            </section>
+            
+            <!-- Habits Module -->
+            <section class="module-section" id="module-habits">
+                <div class="cards-grid" id="habitsList">
+                    <div class="habit-card">
+                        <div class="habit-icon">💧</div>
+                        <div class="habit-name">Вода</div>
+                        <div class="habit-progress">
+                            <div class="habit-progress-bar" style="width: 0%"></div>
+                        </div>
+                        <input type="number" class="habit-input" placeholder="0/2 л" id="habit-water">
+                        <button class="btn btn-primary" style="width: 100%" onclick="updateHabit('water')">Обновить</button>
+                    </div>
+                    
+                    <div class="habit-card">
+                        <div class="habit-icon">💪</div>
+                        <div class="habit-name">Спорт</div>
+                        <div class="habit-progress">
+                            <div class="habit-progress-bar" style="width: 0%"></div>
+                        </div>
+                        <input type="number" class="habit-input" placeholder="0/30 мин" id="habit-sport">
+                        <button class="btn btn-primary" style="width: 100%" onclick="updateHabit('sport')">Обновить</button>
+                    </div>
+                    
+                    <div class="habit-card">
+                        <div class="habit-icon">📚</div>
+                        <div class="habit-name">Чтение</div>
+                        <div class="habit-progress">
+                            <div class="habit-progress-bar" style="width: 0%"></div>
+                        </div>
+                        <input type="number" class="habit-input" placeholder="0/20 стр" id="habit-reading">
+                        <button class="btn btn-primary" style="width: 100%" onclick="updateHabit('reading')">Обновить</button>
+                    </div>
+                    
+                    <div class="habit-card">
+                        <div class="habit-icon">😴</div>
+                        <div class="habit-name">Сон</div>
+                        <div class="habit-progress">
+                            <div class="habit-progress-bar" style="width: 75%"></div>
+                        </div>
+                        <input type="number" class="habit-input" placeholder="6/8 час" id="habit-sleep" value="6">
+                        <button class="btn btn-primary" style="width: 100%" onclick="updateHabit('sleep')">Обновить</button>
+                    </div>
+                    
+                    <div class="habit-card">
+                        <div class="habit-icon">🚶</div>
+                        <div class="habit-name">Прогулка</div>
+                        <div class="habit-progress">
+                            <div class="habit-progress-bar" style="width: 0%"></div>
+                        </div>
+                        <input type="number" class="habit-input" placeholder="0/5 км" id="habit-walk">
+                        <button class="btn btn-primary" style="width: 100%" onclick="updateHabit('walk')">Обновить</button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Notes Module -->
+            <section class="module-section" id="module-notes">
+                <div class="cards-grid" id="notesList">
+                    <!-- Notes will be rendered here -->
+                </div>
+            </section>
+            
+            <!-- Calendar Module -->
+            <section class="module-section" id="module-calendar">
+                <div class="card" style="margin-bottom: 2rem">
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar will be rendered here -->
+                    </div>
+                </div>
+                
+                <h3 style="margin-bottom: 1rem">📅 События на сегодня</h3>
+                <div id="todayEvents">
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p>Нет событий на сегодня</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Finance Module -->
+            <section class="module-section" id="module-finance">
+                <div class="finance-summary">
+                    <div class="finance-card">
+                        <div class="finance-label">Баланс</div>
+                        <div class="finance-amount" id="financeBalance">0 ₽</div>
+                    </div>
+                    <div class="finance-card income">
+                        <div class="finance-label">Доходы</div>
+                        <div class="finance-amount" id="financeIncome">0 ₽</div>
+                    </div>
+                    <div class="finance-card expense">
+                        <div class="finance-label">Расходы</div>
+                        <div class="finance-amount" id="financeExpense">0 ₽</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem">💳 Последние операции</h3>
+                    <div id="financeTransactions">
+                        <div class="empty-state">
+                            <div class="empty-icon">💸</div>
+                            <p>Нет транзакций</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Goals Module -->
+            <section class="module-section" id="module-goals">
+                <div id="goalsList">
+                    <div class="goal-card">
+                        <div class="goal-header">
+                            <div>
+                                <div class="goal-title">🎓 Выучить английский до B2</div>
+                                <div class="goal-deadline">📅 До 31 декабря 2026</div>
+                            </div>
+                            <span class="badge badge-warning">В процессе</span>
+                        </div>
+                        <div class="card-progress">
+                            <div class="card-progress-bar" style="width: 35%"></div>
+                        </div>
+                        <p style="margin-top: 0.75rem; color: var(--text-secondary); font-size: 0.9rem">
+                            Прогресс: 35% (35/100 дней)
+                        </p>
+                    </div>
+                    
+                    <div class="goal-card">
+                        <div class="goal-header">
+                            <div>
+                                <div class="goal-title">💪 Похудеть на 10 кг</div>
+                                <div class="goal-deadline">📅 До 1 июня 2026</div>
+                            </div>
+                            <span class="badge badge-success">Активная</span>
+                        </div>
+                        <div class="card-progress">
+                            <div class="card-progress-bar" style="width: 60%"></div>
+                        </div>
+                        <p style="margin-top: 0.75rem; color: var(--text-secondary); font-size: 0.9rem">
+                            Прогресс: 60% (6/10 кг)
+                        </p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Health Module -->
+            <section class="module-section" id="module-health">
+                <div class="stats-grid">
+                    <div class="health-metric">
+                        <div>❤️ Пульс</div>
+                        <div class="health-value">72</div>
+                        <div class="health-unit">уд/мин</div>
+                    </div>
+                    <div class="health-metric">
+                        <div>👣 Шаги</div>
+                        <div class="health-value">8,432</div>
+                        <div class="health-unit">из 10,000</div>
+                    </div>
+                    <div class="health-metric">
+                        <div>🔥 Калории</div>
+                        <div class="health-value">1,840</div>
+                        <div class="health-unit">ккал</div>
+                    </div>
+                    <div class="health-metric">
+                        <div>⚖️ Вес</div>
+                        <div class="health-value">75.5</div>
+                        <div class="health-unit">кг</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem">📈 Динамика за неделю</h3>
+                    <div style="height: 200px; background: var(--bg-input); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary)">
+                        📊 График будет здесь
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Analytics Module -->
+            <section class="module-section" id="module-analytics">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-value">85%</div>
+                        <div class="stat-label">Продуктивность</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">Дней подряд</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⭐</div>
+                        <div class="stat-value">2,450</div>
+                        <div class="stat-label">Очков опыта</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏆</div>
+                        <div class="stat-value">7</div>
+                        <div class="stat-label">Достижений</div>
+                    </div>
+                </div>
+                
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem">📊 Активность по дням</h3>
+                        <div style="display: flex; gap: 0.5rem; align-items: flex-end; height: 150px; padding: 1rem; background: var(--bg-input); border-radius: 12px">
+                            <div style="flex: 1; background: var(--primary); border-radius: 4px; height: 60%"></div>
+                            <div style="flex: 1; background: var(--primary); border-radius: 4px; height: 80%"></div>
+                            <div style="flex: 1; background: var(--primary); border-radius: 4px; height: 45%"></div>
+                            <div style="flex: 1; background: var(--primary); border-radius: 4px; height: 90%"></div>
+                            <div style="flex: 1; background: var(--primary); border-radius: 4px; height: 70%"></div>
+                            <div style="flex: 1; background: var(--secondary); border-radius: 4px; height: 100%"></div>
+                            <div style="flex: 1; background: var(--border); border-radius: 4px; height: 30%"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-secondary)">
+                            <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 style="margin-bottom: 1rem">🏅 Топ достижений</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem">
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-input); border-radius: 10px">
+                                <span style="font-size: 1.5rem">🎯</span>
+                                <div style="flex: 1">
+                                    <div style="font-weight: 600">Мастер задач</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary)">Выполнено 100 задач</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-input); border-radius: 10px">
+                                <span style="font-size: 1.5rem">🔥</span>
+                                <div style="flex: 1">
+                                    <div style="font-weight: 600">Непрерывность</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary)">12 дней подряд</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-input); border-radius: 10px">
+                                <span style="font-size: 1.5rem">💰</span>
+                                <div style="flex: 1">
+                                    <div style="font-weight: 600">Копилка</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary)">Накоплено 50,000₽</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+        </main>
+    </div>
+    
+    <script>
+        // ========================================
+        // 🔄 NAVIGATION & MODULES
+        // ========================================
+        const modules = {
+            tasks: { title: 'Задачи', icon: '✅' },
+            habits: { title: 'Привычки', icon: '🎯' },
+            notes: { title: 'Заметки', icon: '📝' },
+            calendar: { title: 'Календарь', icon: '📅' },
+            finance: { title: 'Финансы', icon: '💰' },
+            goals: { title: 'Цели', icon: '🏆' },
+            health: { title: 'Здоровье', icon: '❤️' },
+            analytics: { title: 'Аналитика', icon: '📊' }
         };
-    </script>
-
-    <script>
-        async function init() {
-          console.log('🚀 MVP Dashboard с auth');
+        
+        let currentModule = 'tasks';
+        
+        // Navigation
+        document.querySelectorAll('.nav-item[data-module]').forEach(item => {
+            item.addEventListener('click', () => {
+                const moduleId = item.dataset.module;
+                switchModule(moduleId);
+                
+                // Mobile: close sidebar
+                if (window.innerWidth <= 1024) {
+                    document.getElementById('sidebar').classList.remove('open');
+                    document.querySelector('.overlay').classList.remove('show');
+                }
+            });
+        });
+        
+        function switchModule(moduleId) {
+            currentModule = moduleId;
+            
+            // Update nav
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-module="${moduleId}"]`).classList.add('active');
+            
+            // Update sections
+            document.querySelectorAll('.module-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(`module-${moduleId}`).classList.add('active');
+            
+            // Update header
+            const module = modules[moduleId];
+            document.getElementById('pageTitle').innerHTML = `<span>${module.icon}</span> ${module.title}`;
+            
+            // Show/hide add button
+            const addBtn = document.getElementById('addBtn');
+            if (['tasks', 'notes', 'finance'].includes(moduleId)) {
+                addBtn.style.display = 'inline-flex';
+            } else {
+                addBtn.style.display = 'none';
+            }
+            
+            // Render module data
+            renderModule(moduleId);
         }
-        init();
-    </script>
-    
-    <script>
+        
+        function renderModule(moduleId) {
+            switch(moduleId) {
+                case 'tasks':
+                    renderTasks();
+                    break;
+                case 'notes':
+                    renderNotes();
+                    break;
+                case 'calendar':
+                    renderCalendar();
+                    break;
+            }
+        }
+        
+        // ========================================
+        // ✅ TASKS
+        // ========================================
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        
+        function renderTasks() {
+            const tasksList = document.getElementById('tasksList');
+            const totalTasks = document.getElementById('totalTasks');
+            const completedTasks = document.getElementById('completedTasks');
+            const pendingTasks = document.getElementById('pendingTasks');
+            
+            const completed = tasks.filter(t => t.completed).length;
+            const pending = tasks.length - completed;
+            
+            totalTasks.textContent = tasks.length;
+            completedTasks.textContent = completed;
+            pendingTasks.textContent = pending;
+            
+            if (tasks.length === 0) {
+                tasksList.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1">
+                        <div class="empty-icon">📋</div>
+                        <p>Нет задач</p>
+                        <button class="btn btn-primary" style="margin-top: 1rem" onclick="showAddModal()">
+                            ➕ Создать первую задачу
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            tasksList.innerHTML = tasks.map(task => `
+                <div class="card" style="${task.completed ? 'opacity: 0.7' : ''}">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span style="font-size: 1.5rem">${task.icon || '✅'}</span>
+                            ${task.title}
+                        </div>
+                        <span class="badge ${task.completed ? 'badge-success' : 'badge-warning'}">
+                            ${task.completed ? 'Готово' : 'В работе'}
+                        </span>
+                    </div>
+                    ${task.description ? `<p style="color: var(--text-secondary); margin-bottom: 1rem">${task.description}</p>` : ''}
+                    <div style="display: flex; gap: 0.5rem">
+                        <button class="btn ${task.completed ? 'btn-secondary' : 'btn-primary'}" 
+                                style="flex: 1" 
+                                onclick="toggleTask(${task.id})">
+                            ${task.completed ? '↩️ Отменить' : '✅ Выполнить'}
+                        </button>
+                        <button class="btn btn-secondary" onclick="deleteTask(${task.id})">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function addTask(title, description, icon) {
+            const task = {
+                id: Date.now(),
+                title,
+                description: description || '',
+                icon: icon || '✅',
+                completed: false,
+                createdAt: new Date().toISOString()
+            };
+            tasks.push(task);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            renderTasks();
+        }
+        
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                renderTasks();
+            }
+        }
+        
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            renderTasks();
+        }
+        
+        // ========================================
+        // 📝 NOTES
+        // ========================================
+        let notes = JSON.parse(localStorage.getItem('notes')) || [];
+        
+        function renderNotes() {
+            const notesList = document.getElementById('notesList');
+            
+            if (notes.length === 0) {
+                notesList.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1">
+                        <div class="empty-icon">📭</div>
+                        <p>Нет заметок</p>
+                        <button class="btn btn-primary" style="margin-top: 1rem" onclick="showAddModal()">
+                            ➕ Создать заметку
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            notesList.innerHTML = notes.map(note => `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">${note.title}</div>
+                        <button class="btn btn-secondary" onclick="deleteNote(${note.id})">🗑️</button>
+                    </div>
+                    <p style="color: var(--text-secondary); line-height: 1.6">${note.content}</p>
+                    <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary)">
+                        📅 ${new Date(note.createdAt).toLocaleDateString('ru-RU')}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function addNote(title, content) {
+            const note = {
+                id: Date.now(),
+                title,
+                content,
+                createdAt: new Date().toISOString()
+            };
+            notes.push(note);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            renderNotes();
+        }
+        
+        function deleteNote(id) {
+            notes = notes.filter(n => n.id !== id);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            renderNotes();
+        }
+        
+        // ========================================
+        // 📅 CALENDAR
+        // ========================================
+        function renderCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+            const today = new Date();
+            const currentDay = today.getDate();
+            
+            let html = days.map(day => `<div class="calendar-day-header">${day}</div>`).join('');
+            
+            // Simple calendar (current month)
+            const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            for (let i = 1; i <= daysInMonth; i++) {
+                const isActive = i === currentDay ? 'active' : '';
+                const hasEvents = [5, 12, 16].includes(i) ? 'has-events' : '';
+                html += `<div class="calendar-day ${isActive} ${hasEvents}">${i}</div>`;
+            }
+            
+            calendarGrid.innerHTML = html;
+        }
+        
+        // ========================================
+        // 🎯 HABITS
+        // ========================================
+        function updateHabit(habitName) {
+            const input = document.getElementById(`habit-${habitName}`);
+            const value = parseInt(input.value) || 0;
+            const card = input.closest('.habit-card');
+            const progressBar = card.querySelector('.habit-progress-bar');
+            
+            // Calculate percentage (simplified)
+            let max = 100;
+            if (habitName === 'water') max = 2;
+            if (habitName === 'sport') max = 30;
+            if (habitName === 'reading') max = 20;
+            if (habitName === 'sleep') max = 8;
+            if (habitName === 'walk') max = 5;
+            
+            const percent = Math.min((value / max) * 100, 100);
+            progressBar.style.width = `${percent}%`;
+            
+            // Save to localStorage
+            const habits = JSON.parse(localStorage.getItem('habits') || '{}');
+            habits[habitName] = value;
+            localStorage.setItem('habits', JSON.stringify(habits));
+            
+            // Visual feedback
+            input.style.borderColor = 'var(--success)';
+            setTimeout(() => {
+                input.style.borderColor = '';
+            }, 1000);
+        }
+        
+        // ========================================
+        // 💰 FINANCE (simplified)
+        // ========================================
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        
+        function renderFinance() {
+            const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const expense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const balance = income - expense;
+            
+            document.getElementById('financeBalance').textContent = `${balance.toLocaleString()} ₽`;
+            document.getElementById('financeIncome').textContent = `+${income.toLocaleString()} ₽`;
+            document.getElementById('financeExpense').textContent = `-${expense.toLocaleString()} ₽`;
+        }
+        
+        function addTransaction(title, amount, type) {
+            const transaction = {
+                id: Date.now(),
+                title,
+                amount: parseFloat(amount),
+                type,
+                date: new Date().toISOString()
+            };
+            transactions.unshift(transaction);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            renderFinance();
+        }
+        
+        // ========================================
+        // 🎨 THEME & UI
+        // ========================================
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+        
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.querySelector('.overlay').classList.toggle('show');
+        }
+        
+        function showAddModal() {
+            const title = prompt(currentModule === 'tasks' ? 'Название задачи:' : 'Название заметки:');
+            if (!title) return;
+            
+            if (currentModule === 'tasks') {
+                const description = prompt('Описание (необязательно):') || '';
+                const icon = prompt('Иконка (эмодзи):', '✅') || '✅';
+                addTask(title, description, icon);
+            } else if (currentModule === 'notes') {
+                const content = prompt('Содержание:') || '';
+                addNote(title, content);
+            } else if (currentModule === 'finance') {
+                const amount = prompt('Сумма:') || '0';
+                const type = confirm('Доход? (Отмена = Расход)') ? 'income' : 'expense';
+                addTransaction(title, amount, type);
+            }
+        }
+        
+        function logout() {
+            if (confirm('Выйти из приложения?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+        
+        // ========================================
+        // 🚀 INIT
+        // ========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load theme
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            // Load user
+            const savedUser = sessionStorage.getItem('authUser');
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                document.getElementById('userName').textContent = user.email || user.name || 'Пользователь';
+                document.getElementById('userAvatar').textContent = (user.email || 'U')[0].toUpperCase();
+            }
+            
+            // Render initial data
+            renderTasks();
+            renderNotes();
+            renderCalendar();
+            renderFinance();
+            
+            // Load habits
+            const habits = JSON.parse(localStorage.getItem('habits') || '{}');
+            Object.keys(habits).forEach(habit => {
+                const input = document.getElementById(`habit-${habit}`);
+                if (input) {
+                    input.value = habits[habit];
+                    updateHabit(habit);
+                }
+            });
+        });
+        
+        // Service Worker
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('✅ SW registered'))
-            .catch(err => console.log('❌ SW failed:', err));
-        }
-    </script>
-    
-    <script>
-        const themeSwitch = document.getElementById('themeSwitch');
-        if (themeSwitch) {
-          const html = document.documentElement;
-          const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-          html.setAttribute('data-theme', savedTheme);
-          themeSwitch.checked = savedTheme === 'dark';
-          themeSwitch.onchange = () => {
-            const theme = themeSwitch.checked ? 'dark' : 'light';
-            html.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-          };
+            navigator.serviceWorker.register('/sw.js').catch(console.error);
         }
     </script>
 </body>
