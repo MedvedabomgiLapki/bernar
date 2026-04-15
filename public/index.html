@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="./src/modules/tracker/tracker.css" type="text/css">
     
     <style>
-        /* 🎨 Новая цветовая схема */
+        /* 🎨 Цветовая схема (ваша) */
         :root {
             --primary: #10b981;
             --primary-dark: #059669;
@@ -52,32 +52,75 @@
             --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
         
-        /* 🎨 Применение цветов */
+        /* 🎨 Базовые стили */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
             background: var(--bg-page);
             color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             transition: background 0.3s, color 0.3s;
+            min-height: 100vh;
         }
         
+        /* 🏗️ Layout: Sidebar + Content */
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .app-wrapper {
+            display: flex;
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        /* 🔝 Header */
         .header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
             box-shadow: var(--shadow-sm);
+            padding: 0.75rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
-        .nav-btn {
-            background: var(--bg-card);
-            color: var(--text-primary);
-            border: 2px solid var(--border);
-            border-radius: var(--radius-sm);
-            transition: all 0.2s;
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
         }
         
-        .nav-btn.active, .nav-btn:hover {
-            background: var(--primary);
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .user-display {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            border-color: var(--primary-dark);
-            box-shadow: var(--shadow-sm);
+            border-radius: 12px;
+            padding: 0.5rem 0.875rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .logout-btn {
@@ -85,31 +128,126 @@
             color: white;
             border: none;
             border-radius: 10px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
             transition: background 0.2s;
         }
-        
-        .logout-btn:hover {
-            background: #ea580c;
-        }
-        
-        .user-display {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border-radius: 12px;
-            font-weight: 500;
-        }
+        .logout-btn:hover { background: #ea580c; }
         
         .points-display {
             background: var(--bg-card);
             border: 2px solid var(--primary);
             color: var(--primary-dark);
             border-radius: 10px;
+            padding: 0.4rem 0.75rem;
             font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        /* 🌓 Theme Toggle */
+        .theme-toggle {
+            --toggle-size: 24px;
+            position: relative;
+            width: calc(var(--toggle-size) * 2);
+            height: var(--toggle-size);
+            display: inline-block;
+        }
+        .theme-toggle input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.3);
+            border-radius: var(--toggle-size);
+            transition: 0.3s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "☀️";
+            height: calc(var(--toggle-size) - 4px);
+            width: calc(var(--toggle-size) - 4px);
+            left: 2px; bottom: 2px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+        input:checked + .slider { background: var(--primary); }
+        input:checked + .slider:before {
+            transform: translateX(calc(var(--toggle-size) - 2px));
+            content: "🌙";
+        }
+        
+        /* 🧭 SIDEBAR NAVIGATION */
+        .sidebar {
+            width: 220px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 1rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: sticky;
+            top: 72px;
+            height: calc(100vh - 140px);
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            white-space: nowrap;
+        }
+        
+        .nav-btn .nav-icon { font-size: 1.3rem; }
+        
+        .nav-btn:hover {
+            background: var(--primary-light, #d1fae5);
+            border-color: var(--primary);
+            transform: translateX(3px);
+        }
+        
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: transparent;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        /* 📦 Main Content */
+        #main-container {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            min-height: calc(100vh - 140px);
         }
         
         /* Auth форма */
         #auth-root {
-            background: var(--bg-page);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            padding: 1rem;
         }
         
         #auth-root > div {
@@ -117,12 +255,39 @@
             box-shadow: var(--shadow);
             border-radius: var(--radius);
             border: 1px solid var(--border);
+            padding: 2.5rem 2rem;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        #auth-root h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+        
+        #auth-root p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
         }
         
         .tab-btn {
+            flex: 1;
+            padding: 0.875rem;
+            border: 2px solid var(--border);
             background: var(--bg-card);
-            border-color: var(--border);
             color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         
         .tab-btn.active {
@@ -131,24 +296,46 @@
             border-color: var(--primary-dark);
         }
         
-        #auth-email, #auth-password {
-            background: var(--bg-input);
-            border-color: var(--border);
+        .form-group {
+            text-align: left;
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
             color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+        
+        #auth-email, #auth-password {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transition: border-color 0.2s;
         }
         
         #auth-email:focus, #auth-password:focus {
+            outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-            outline: none;
         }
         
         #auth-submit {
+            width: 100%;
+            padding: 1rem;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem;
             font-weight: 600;
+            cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
         
@@ -163,146 +350,170 @@
         }
         
         #auth-message {
+            margin-top: 1.25rem;
+            padding: 0.875rem 1rem;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 0.9rem;
             background: var(--bg-input);
             border-left: 4px solid var(--primary);
         }
         
-        /* Навигация */
-        .navigation {
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            padding: 0.75rem;
-        }
-        
-        /* Футер */
+        /* 🦶 Footer */
         .footer {
             background: var(--bg-card);
             color: var(--text-secondary);
             border-top: 1px solid var(--border);
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.875rem;
+            margin-top: auto;
         }
         
-        /* Переключатель темы */
-        .theme-toggle {
-            --toggle-size: 24px;
-            display: inline-block;
-            position: relative;
-            width: calc(var(--toggle-size) * 2);
-            height: var(--toggle-size);
+        /* 📱 Mobile Responsive (< 768px) */
+        @media (max-width: 768px) {
+            .app-wrapper { flex-direction: column; }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 0.5rem;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                white-space: nowrap;
+            }
+            
+            .sidebar .nav-btn {
+                flex-direction: column;
+                font-size: 0.8rem;
+                padding: 0.6rem 0.8rem;
+                min-width: 75px;
+                justify-content: center;
+                gap: 0.3rem;
+            }
+            
+            .sidebar .nav-btn .nav-icon { font-size: 1.2rem; }
+            
+            #main-container {
+                padding: 1rem;
+                min-height: auto;
+            }
+            
+            .header h1 { font-size: 1.2rem; }
+            .user-display { font-size: 0.85rem; padding: 0.4rem 0.7rem; max-width: 120px; }
+            .logout-btn { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+            .points-display { padding: 0.3rem 0.5rem; font-size: 0.8rem; }
         }
         
-        .theme-toggle input {
-            opacity: 0;
-            width: 0;
-            height: 0;
+        @media (max-width: 480px) {
+            .header-content { gap: 0.5rem; }
+            .header { padding: 0.6rem 1rem; }
+            .sidebar .nav-btn { min-width: 65px; padding: 0.5rem 0.6rem; font-size: 0.75rem; }
+            #auth-root > div { padding: 2rem 1.5rem; }
+            #auth-root h1 { font-size: 1.75rem; }
         }
         
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0;
-            right: 0; bottom: 0;
-            background: var(--border);
-            border-radius: var(--toggle-size);
-            transition: 0.3s;
+        /* 🌙 Dark mode fixes */
+        [data-theme="dark"] .sidebar {
+            background: var(--bg-card) !important;
+            border-right-color: var(--border) !important;
         }
-        
-        .slider:before {
-            position: absolute;
-            content: "☀️";
-            height: calc(var(--toggle-size) - 4px);
-            width: calc(var(--toggle-size) - 4px);
-            left: 2px;
-            bottom: 2px;
-            background: white;
-            border-radius: 50%;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
+        [data-theme="dark"] .nav-btn {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+            border-color: var(--border) !important;
         }
-        
-        input:checked + .slider {
-            background: var(--primary);
+        [data-theme="dark"] .nav-btn:hover {
+            background: var(--primary-light) !important;
         }
-        
-        input:checked + .slider:before {
-            transform: translateX(calc(var(--toggle-size) - 2px));
-            content: "🌙";
+        [data-theme="dark"] .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
+            color: white !important;
         }
     </style>
 </head>
 
 <body>
     <div id="app-container">
-        <!-- Header -->
+        
+        <!-- 🔝 Header -->
         <header class="header">
             <div class="header-content">
                 <h1>🎯 Smart Dashboard</h1>
                 <div class="user-profile" id="user-profile">
-                    <span id="user-display" class="user-display" style="padding:0.75rem 1rem;border-radius:12px;font-weight:500;font-size:0.95rem;">Гость</span>
-                    <button onclick="logout()" class="logout-btn" style="padding:0.5rem 1rem;font-size:0.9rem;cursor:pointer;">Выход</button>
+                    <span id="user-display" class="user-display">Гость</span>
+                    <div class="points-display">
+                        <span>⭐</span><span id="total-points">0</span>
+                    </div>
+                    <button onclick="logout()" class="logout-btn">Выход</button>
                     <label class="theme-toggle">
                         <input type="checkbox" id="themeSwitch">
                         <span class="slider"></span>
                     </label>
-                    <div class="points-display" style="padding:0.5rem 0.75rem;margin-left:0.5rem;">
-                        <span class="points-label">баллов</span>
-                        <span id="total-points" class="points-value" style="margin-left:0.25rem;">0</span>
-                    </div>
                 </div>
             </div>
         </header>
 
-        <!-- Navigation -->
-        <nav class="navigation">
-            <button data-route="tasks" class="nav-btn active">
-                <span class="nav-icon">✅</span> Задачи
-            </button>
-            <button data-route="notes" class="nav-btn">
-                <span class="nav-icon">🗒️</span> Заметки  
-            </button>
-            <button data-route="tracker" class="nav-btn">
-                <span class="nav-icon">🚀</span> Прогресс
-            </button>
-        </nav>
+        <!-- 🏗️ Layout Wrapper -->
+        <div class="app-wrapper">
+            
+            <!-- 🧭 Sidebar Navigation (сбоку на десктопе) -->
+            <nav class="sidebar">
+                <button data-route="tasks" class="nav-btn active">
+                    <span class="nav-icon">✅</span>
+                    <span class="nav-text">Задачи</span>
+                </button>
+                <button data-route="notes" class="nav-btn">
+                    <span class="nav-icon">🗒️</span>
+                    <span class="nav-text">Заметки</span>
+                </button>
+                <button data-route="tracker" class="nav-btn">
+                    <span class="nav-icon">🚀</span>
+                    <span class="nav-text">Прогресс</span>
+                </button>
+            </nav>
 
-        <!-- Main Content -->
-        <main id="main-container">
-            <div id="auth-root" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;">
-                <div style="max-width:400px;width:100%;padding:3rem 2rem;border-radius:16px;text-align:center;">
-                    <h1 style="font-size:2.5rem;margin-bottom:1rem;color:var(--primary);">🎯 Smart Dashboard</h1>
-                    <p style="margin-bottom:2rem;color:var(--text-secondary);">Вход / Регистрация</p>
-                    
-                    <div style="display:flex;gap:1rem;margin-bottom:2rem;">
-                        <button id="tab-login" class="tab-btn active" style="flex:1;padding:1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer;font-weight:500;transition:all 0.2s;">Вход</button>
-                        <button id="tab-register" class="tab-btn" style="flex:1;padding:1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer;font-weight:500;transition:all 0.2s;">Регистрация</button>
+            <!-- 📦 Main Content Area -->
+            <main id="main-container">
+                <!-- Auth Screen -->
+                <div id="auth-root">
+                    <div>
+                        <h1>🎯 Smart Dashboard</h1>
+                        <p>Вход / Регистрация</p>
+                        
+                        <div class="tabs">
+                            <button id="tab-login" class="tab-btn active">Вход</button>
+                            <button id="tab-register" class="tab-btn">Регистрация</button>
+                        </div>
+                        
+                        <form id="auth-form" style="display:flex;flex-direction:column;gap:1.25rem;">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input id="auth-email" type="email" placeholder="demo@gmail.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Пароль</label>
+                                <input id="auth-password" type="password" minlength="6" placeholder="******" required>
+                            </div>
+                            <button type="submit" id="auth-submit">Войти</button>
+                        </form>
+                        
+                        <div id="auth-message"></div>
                     </div>
-                    
-                    <form id="auth-form" style="display:flex;flex-direction:column;gap:1.5rem;">
-                        <div style="text-align:left;">
-                            <label style="display:block;margin-bottom:0.5rem;font-weight:500;color:var(--text-primary);">Email</label>
-                            <input id="auth-email" type="email" placeholder="demo@gmail.com" required style="width:100%;padding:1rem;border:2px solid var(--border);border-radius:10px;font-size:1rem;box-sizing:border-box;">
-                        </div>
-                        <div style="text-align:left;">
-                            <label style="display:block;margin-bottom:0.5rem;font-weight:500;color:var(--text-primary);">Пароль</label>
-                            <input id="auth-password" type="password" minlength="6" placeholder="******" required style="width:100%;padding:1rem;border:2px solid var(--border);border-radius:10px;font-size:1rem;box-sizing:border-box;">
-                        </div>
-                        <button type="submit" id="auth-submit" style="width:100%;padding:1rem;font-size:1.1rem;font-weight:600;cursor:pointer;">Войти</button>
-                    </form>
-                    
-                    <div id="auth-message" style="margin-top:1.5rem;padding:1rem;border-radius:10px;font-weight:500;"></div>
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
 
-        <!-- Footer -->
-        <footer class="footer" style="padding:1rem;text-align:center;font-size:0.9rem;">
+        <!-- 🦶 Footer -->
+        <footer class="footer">
             <p>© 2026 Smart Dashboard PWA | Работает оффлайн 🟢</p>
         </footer>
     </div>
 
-    <!-- ⚠️ СКРИПТЫ АВТОРИЗАЦИИ, КЕШИРОВАНИЯ И PWA — НЕ ИЗМЕНЕНЫ -->
+    <!-- ⚠️ СКРИПТЫ — БЕЗ ИЗМЕНЕНИЙ (авторизация, кеширование, PWA) -->
     
     <script src="/src/core/router.js"></script>
     <script src="/src/core/dataService.js"></script>
@@ -317,7 +528,7 @@
     <script src="/src/modules/tracker/trackerUI.js"></script>
     
     <script>
-        // Проверяем сохранённый session
+        // === АВТОРИЗАЦИЯ (ваш оригинальный код) ===
         const savedUser = sessionStorage.getItem('authUser');
         if (savedUser) {
           window.currentUser = JSON.parse(savedUser);
@@ -326,8 +537,6 @@
             userDisplay.textContent = window.currentUser.email;
             userDisplay.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
             userDisplay.style.color = 'white';
-            
-            // Запускаем dashboard БЕЗ auth экрана
             document.getElementById('auth-root').style.display = 'none';
             setTimeout(async () => {
               await window.Core.init();
@@ -336,6 +545,7 @@
             }, 500);
           }
         }
+        
         const form = document.getElementById('auth-form');
         const tabs = document.querySelectorAll('.tab-btn');
         const message = document.getElementById('auth-message');
@@ -363,7 +573,6 @@
           try {
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
-            
             const url = mode === 'register' ? '/api/register' : '/api/login';
             const res = await fetch(url, {
               method: 'POST',
@@ -383,22 +592,17 @@
               : '✅ Вход выполнен!';
             
             setTimeout(async () => {
-              // ✅ Сохраняем пользователя ГЛОБАЛЬНО
               window.currentUser = { email };
-              // Сохраняем в sessionStorage (работает в PWA)
               sessionStorage.setItem('authUser', JSON.stringify({email}));
               sessionStorage.setItem('authSession', JSON.stringify(data.session || {}));
               
-              // ✅ Обновляем имя в nav
               const userDisplay = document.getElementById('user-display');
               userDisplay.textContent = email;
               userDisplay.style.background = 'linear-gradient(135deg, var(--primary), var(--secondary))';
               userDisplay.style.color = 'white';
               
-              // Скрываем auth
               document.getElementById('auth-root').remove();
               
-              // Запускаем dashboard
               await window.Core.init();
               window.Router.init();
               await window.Core.loadModule('tasks');
@@ -412,6 +616,7 @@
             submitBtn.disabled = false;
           }
         };
+        
         window.logout = function() {
           sessionStorage.removeItem('authUser');
           sessionStorage.removeItem('authSession');
@@ -428,7 +633,6 @@
     <script>
         async function init() {
           console.log('🚀 MVP Dashboard с auth');
-          const container = document.getElementById('main-container');
         }
         init();
     </script>
